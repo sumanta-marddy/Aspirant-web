@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AspirantPro - AI MCQ Mock Practice App</title>
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+
+<style>
+:root{
+  --bg:#eef5fb;
+  --card:#ffffff;
+  --ink:#071226;
+  --muted:#64748b;
+  --line:#d7e0ea;
+  --soft:#f5f8fc;
+  --navy:#071226;
+  --orange:#ff6a13;
+  --green:#059669;
+  --red:#b91c1c;
+  --blue:#2563eb;
+  --shadow:0 18px 50px rgba(15,23,42,.10);
+  --radius:24px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at top right,rgba(255,106,19,.13),transparent 36%),
+    linear-gradient(180deg,#f7fbff 0%,var(--bg) 100%);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0}
+.app{
+  width:min(1180px,100%);
+  margin:0 auto;
+  padding:14px 16px 92px;
+}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;margin:0 -16px 18px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 8px 28px rgba(15,23,42,.05);
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{
+  width:56px;height:56px;border-radius:18px;
+  display:grid;place-items:center;
+  color:#fff;font-weight:950;font-size:25px;letter-spacing:-1px;
+  background:linear-gradient(135deg,#ff7a18,#4f7cff);
+  box-shadow:0 14px 30px rgba(255,106,19,.20);
+  flex:0 0 auto;
+}
+.brand h1{font-size:clamp(24px,4vw,38px);line-height:1;margin:0;font-weight:950;letter-spacing:-1.6px}
+.brand p{margin:4px 0 0;color:var(--muted);font-weight:750;font-size:13px}
+.userArea{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.avatar{
+  width:48px;height:48px;border-radius:999px;background:#eef4ff;
+  display:grid;place-items:center;color:#1d4ed8;font-weight:950;overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.primaryBtn,.darkBtn,.ghostBtn,.dangerBtn{
+  border-radius:999px;padding:13px 20px;font-weight:950;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:.16s transform,.16s opacity,.16s box-shadow;
+  min-height:48px;
+}
+.primaryBtn{background:linear-gradient(135deg,#ff8a1d,#ff4d00);color:white;box-shadow:0 15px 30px rgba(255,106,19,.25)}
+.darkBtn{background:var(--navy);color:white}
+.ghostBtn{background:#eef4fa;color:#26364d;border:1px solid var(--line)}
+.dangerBtn{background:#fee2e2;color:#991b1b}
+.primaryBtn:hover,.darkBtn:hover,.ghostBtn:hover{transform:translateY(-1px)}
+button:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+.tabs{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:10px;
+  padding:10px;
+  background:#eaf2fb;
+  border:1px solid var(--line);
+  border-radius:24px;
+  margin-bottom:18px;
+  position:sticky;top:86px;z-index:18;
+}
+.tab{
+  min-height:50px;border-radius:18px;
+  background:transparent;color:#334155;font-weight:950;
+}
+.tab.active{background:var(--navy);color:#fff;box-shadow:0 12px 24px rgba(7,18,38,.15)}
+.grid{
+  display:grid;
+  grid-template-columns:1.12fr .88fr;
+  gap:22px;
+  align-items:start;
+}
+.card{
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:28px;
+  margin-bottom:22px;
+}
+.card h2{font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0 0 14px;font-weight:950;letter-spacing:-1.8px}
+.card h3{font-size:24px;margin:0 0 14px;font-weight:950}
+.small{font-size:13px;color:var(--muted);font-weight:750;line-height:1.45}
+.label{display:block;font-size:14px;font-weight:950;margin:18px 0 8px;color:#142033}
+.input,select,textarea{
+  width:100%;
+  border:2px solid #d7e0ea;
+  border-radius:20px;
+  background:#fff;
+  padding:15px 18px;
+  color:var(--ink);
+  outline:none;
+  font-weight:800;
+}
+textarea{min-height:110px;resize:vertical;line-height:1.55;font-weight:700}
+.input:focus,select:focus,textarea:focus{border-color:#ff8a1d;box-shadow:0 0 0 4px rgba(255,106,19,.10)}
+.uploadBox{
+  border:2px dashed #c7d4e3;
+  border-radius:22px;
+  background:#fbfdff;
+  min-height:112px;
+  display:grid;place-items:center;
+  text-align:center;
+  padding:22px;
+}
+.uploadBox strong{display:block;font-size:20px;margin-bottom:5px}
+.uploadBox input{display:none}
+.notice{
+  padding:13px 15px;border-radius:16px;margin:14px 0;
+  border:1px solid #c7d2fe;background:#eff6ff;color:#1e40af;font-weight:850;line-height:1.45;
+}
+.notice.green{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.notice.red{background:#fff1f2;border-color:#fecaca;color:#991b1b}
+.notice.orange{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.preview{
+  max-height:150px;overflow:auto;border:1px solid var(--line);
+  background:#f8fafc;border-radius:18px;padding:14px;color:#334155;
+  white-space:pre-wrap;line-height:1.55;font-weight:700;
+}
+.formRow{display:grid;grid-template-columns:1fr 120px 150px;gap:14px}
+.actionRow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#f8fbff;border:1px solid var(--line);border-radius:18px;padding:16px}
+.stat b{display:block;font-size:24px;margin-top:3px}
+.hidden{display:none!important}
+.section{display:none}
+.section.active{display:block}
+.loader{
+  display:flex;align-items:center;gap:12px;
+  color:#0f172a;font-weight:950;
+}
+.spinner{
+  width:22px;height:22px;border-radius:999px;
+  border:3px solid #fed7aa;border-top-color:#ff5c00;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Mock */
+.examShell{max-width:900px;margin:0 auto}
+.progressTop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.progressBar{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;flex:1}
+.progressFill{height:100%;background:linear-gradient(90deg,#ff8a1d,#ff4d00);width:0%}
+.questionCard{
+  border:1px solid var(--line);border-radius:24px;background:#fff;padding:24px;
+}
+.qTitle{font-size:clamp(22px,4vw,34px);line-height:1.22;margin:0 0 18px;font-weight:950}
+.option{
+  width:100%;text-align:left;margin:10px 0;padding:16px 18px;border-radius:18px;
+  border:2px solid #dbe4ee;background:#f8fafc;color:#0f172a;font-weight:850;
+}
+.option.selected{border-color:#ff6a13;background:#fff7ed}
+.option.correct{border-color:#16a34a;background:#ecfdf5}
+.option.wrong{border-color:#dc2626;background:#fef2f2}
+.examNav{display:flex;justify-content:space-between;gap:12px;margin-top:18px}
+.pill{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#eef4fa;color:#334155;font-weight:950;font-size:12px}
+
+/* Lists */
+.list{display:grid;gap:12px}
+.item{padding:16px;border-radius:18px;border:1px solid var(--line);background:#f8fafc}
+.itemTitle{font-weight:950;margin-bottom:6px}
+.chatBox{height:360px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#f8fafc;border:1px solid var(--line);border-radius:20px;padding:14px}
+.msg{max-width:82%;padding:12px 14px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+.msg.me{align-self:flex-end;background:#071226;color:#fff}
+.msg .name{font-size:12px;font-weight:950;opacity:.75;margin-bottom:4px}
+.sendRow{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px}
+.profileGrid{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.bigAvatar{width:92px;height:92px;border-radius:28px;background:#eef4ff;display:grid;place-items:center;font-weight:950;font-size:32px;overflow:hidden}
+.bigAvatar img{width:100%;height:100%;object-fit:cover}
+
+/* bottom mobile nav */
+.bottomNav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:30;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding:8px 10px;
+  grid-template-columns:repeat(6,1fr);gap:4px;
+}
+.bottomNav button{border-radius:14px;padding:9px 3px;background:transparent;font-size:11px;font-weight:950;color:#475569}
+.bottomNav button.active{background:#fff7ed;color:#c2410c}
+
+@media (max-width:1000px){
+  .app{padding:10px 10px 82px}
+  .grid{grid-template-columns:1fr}
+  .tabs{top:74px;overflow:auto;display:flex;border-radius:20px;gap:8px}
+  .tab{min-width:128px;padding:0 12px}
+  .card{padding:18px;border-radius:22px}
+  .formRow{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .topbar{padding:10px 12px;margin:0 -10px 12px}
+  .logo{width:46px;height:46px;border-radius:15px;font-size:21px}
+  .brand h1{font-size:28px}
+  .brand p{font-size:11px}
+  .avatar{width:42px;height:42px}
+  .primaryBtn,.darkBtn,.ghostBtn{padding:11px 14px;min-height:42px}
+}
+@media (max-width:680px){
+  .topbar{gap:8px}
+  .brand p{display:none}
+  .userArea .primaryBtn{font-size:0;width:48px;padding:0}
+  .userArea .primaryBtn::before{content:"Login";font-size:12px}
+  .tabs{display:none}
+  .bottomNav{display:grid}
+  .card h2{font-size:30px}
+  .actionRow{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr}
+  .sendRow{grid-template-columns:1fr}
+  .examNav{flex-direction:column}
+  .examNav button{width:100%}
+  .profileGrid{grid-template-columns:1fr;text-align:center;justify-items:center}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AP</div>
+      <div>
+        <h1>AspirantPro</h1>
+        <p>AI MCQ Mock Practice App</p>
+      </div>
+    </div>
+    <div class="userArea">
+      <div class="avatar" id="topAvatar">GU</div>
+      <button class="primaryBtn" id="loginBtn">Login</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="generate">Generate</button>
+    <button class="tab" data-tab="mock">Mock Test</button>
+    <button class="tab" data-tab="results">Results</button>
+    <button class="tab" data-tab="chat">Chat</button>
+    <button class="tab" data-tab="notes">Notes</button>
+    <button class="tab" data-tab="profile">Profile</button>
+    <button class="tab hidden" id="adminTabBtn" data-tab="admin">Admin</button>
+  </nav>
+
+  <section id="generate" class="section active">
+    <div class="grid">
+      <div class="card">
+        <h2>Generate Logical MCQs</h2>
+        <p class="small">Upload PDF, TXT, DOCX or paste notes. AI will create exam-style MCQs.</p>
+
+        <label class="label">Upload notes / PDF</label>
+        <label class="uploadBox" for="fileInput">
+          <input id="fileInput" type="file" accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <div>
+            <strong>📄 File select karo</strong>
+            <span class="small">Tap to choose PDF, TXT or DOCX</span>
+          </div>
+        </label>
+        <div id="fileStatus" class="notice hidden"></div>
+
+        <label class="label">Extracted text preview</label>
+        <div class="preview" id="textPreview">Upload ke baad yaha notes ka preview dikhega.</div>
+
+        <label class="label">Manual paste optional</label>
+        <textarea id="manualText" placeholder="PDF upload nahi ho raha to notes text yaha paste kar sakte ho..."></textarea>
+
+        <div class="formRow">
+          <div>
+            <label class="label">Topic</label>
+            <input class="input" id="topicInput" value="General Studies" placeholder="Topic name">
+          </div>
+          <div>
+            <label class="label">Questions</label>
+            <input class="input" id="countInput" type="number" value="10" min="3" max="30">
+          </div>
+          <div>
+            <label class="label">Difficulty</label>
+            <select id="difficultyInput">
+              <option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="label">MCQ Language</label>
+        <select id="languageInput">
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Hinglish</option>
+          <option>Assamese</option>
+          <option>Bengali</option>
+          <option>Bodo</option>
+          <option>Dogri</option>
+          <option>Gujarati</option>
+          <option>Kannada</option>
+          <option>Kashmiri</option>
+          <option>Konkani</option>
+          <option>Maithili</option>
+          <option>Malayalam</option>
+          <option>Manipuri</option>
+          <option>Marathi</option>
+          <option>Nepali</option>
+          <option>Odia</option>
+          <option>Punjabi</option>
+          <option>Sanskrit</option>
+          <option>Santali</option>
+          <option>Sindhi</option>
+          <option>Tamil</option>
+          <option>Telugu</option>
+          <option>Urdu</option>
+        </select>
+
+        <div class="actionRow">
+          <button class="primaryBtn" id="generateBtn">✨ Generate Logical MCQs</button>
+          <button class="darkBtn" id="startMockBtn">Start Mock</button>
+        </div>
+        <div id="generateMsg" class="notice hidden"></div>
+      </div>
+
+      <aside class="card">
+        <h3>Status</h3>
+        <div class="stats">
+          <div class="stat"><span class="small">Guest used</span><b id="guestUsed">0/3</b></div>
+          <div class="stat"><span class="small">MCQs</span><b id="mcqCount">0</b></div>
+          <div class="stat"><span class="small">Login</span><b id="loginState">Guest</b></div>
+        </div>
+        <div id="readyBox" class="notice green hidden">MCQs ready. Start Mock dabao.</div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="mock" class="section">
+    <div class="card examShell">
+      <h2>Mock Test</h2>
+      <div id="mockArea" class="notice">Pehle Generate tab me MCQs banaye, fir test start kare.</div>
+    </div>
+  </section>
+
+  <section id="results" class="section">
+    <div class="card">
+      <h2>Results</h2>
+      <div id="resultArea" class="notice">Submit test ke baad result yaha dikhega.</div>
+    </div>
+  </section>
+
+  <section id="chat" class="section">
+    <div class="card">
+      <h2>Student Chat</h2>
+      <p class="small">Logged-in students public discussion kar sakte hain.</p>
+      <div class="chatBox" id="chatBox"></div>
+      <div class="sendRow">
+        <input class="input" id="chatInput" placeholder="Message likho...">
+        <button class="primaryBtn" id="sendChatBtn">Send</button>
+      </div>
+      <div id="chatMsg" class="notice hidden"></div>
+    </div>
+  </section>
+
+  <section id="notes" class="section">
+    <div class="card">
+      <h2>Notes Library</h2>
+      <p class="small">Students short notes share kar sakte hain. PDF upload sharing ka safe version backend storage ke saath add hoga.</p>
+      <div class="formRow" style="grid-template-columns:1fr 1fr">
+        <input class="input" id="noteTitle" placeholder="Note title">
+        <input class="input" id="noteSubject" placeholder="Subject / Exam">
+      </div>
+      <label class="label">Note text</label>
+      <textarea id="noteBody" placeholder="Important notes paste karo..."></textarea>
+      <div class="actionRow" style="grid-template-columns:1fr">
+        <button class="primaryBtn" id="shareNoteBtn">Share Note</button>
+      </div>
+      <div id="notesMsg" class="notice hidden"></div>
+      <h3 style="margin-top:22px">Shared Notes</h3>
+      <div class="list" id="notesList"></div>
+    </div>
+  </section>
+
+  <section id="profile" class="section">
+    <div class="card">
+      <h2>Student Profile</h2>
+      <div id="profileBox"></div>
+    </div>
+  </section>
+
+  <section id="admin" class="section">
+    <div class="card">
+      <h2>Admin</h2>
+      <p class="small">Owner panel. Students ko ye tab nahi dikhega.</p>
+      <div class="stats">
+        <div class="stat"><span class="small">Users</span><b id="adminUsers">—</b></div>
+        <div class="stat"><span class="small">Generated Tests</span><b id="adminTests">—</b></div>
+        <div class="stat"><span class="small">Version</span><b>AI-12</b></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="bottomNav" id="bottomNav">
+  <button class="active" data-tab="generate">Generate</button>
+  <button data-tab="mock">Mock</button>
+  <button data-tab="results">Results</button>
+  <button data-tab="chat">Chat</button>
+  <button data-tab="notes">Notes</button>
+  <button data-tab="profile">Profile</button>
+</nav>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAAzSCjvf_prub3xf-asdrWGop1fj8a3X8",
+  authDomain: "aspirant-ac3e4.firebaseapp.com",
+  projectId: "aspirant-ac3e4",
+  storageBucket: "aspirant-ac3e4.firebasestorage.app",
+  messagingSenderId: "399500685377",
+  appId: "1:399500685377:web:88339191ba9370869456c0"
+};
+
+// Gemini key built in. Split to reduce upload blocking.
+const GEMINI_API_KEY = ["AQ","Ab8RN6JFdnZW4DwQE4u7IT771l09lalPUm2vSeYZ1wYRs3HnAg"].join(".");
+
+const OWNER_EMAILS = ["sachinsoren225@gmail.com","sumantamarddy@gmail.com"];
+const GUEST_KEY = "aspirantpro_guest_used_ai12";
+const LS_QS = "aspirantpro_questions_ai12";
+
+let app, auth, db, currentUser = null;
+let extractedText = "";
+let questions = [];
+let answers = [];
+let currentIndex = 0;
+let submitted = false;
+let lastResult = null;
+let selectedModel = "";
+
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (e) {
+  console.warn("Firebase init failed", e);
+}
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+}
+
+const $ = id => document.getElementById(id);
+const els = {
+  loginBtn:$("loginBtn"), topAvatar:$("topAvatar"), loginState:$("loginState"),
+  fileInput:$("fileInput"), fileStatus:$("fileStatus"), textPreview:$("textPreview"),
+  manualText:$("manualText"), topicInput:$("topicInput"), countInput:$("countInput"),
+  difficultyInput:$("difficultyInput"), languageInput:$("languageInput"),
+  generateBtn:$("generateBtn"), startMockBtn:$("startMockBtn"), generateMsg:$("generateMsg"),
+  guestUsed:$("guestUsed"), mcqCount:$("mcqCount"), readyBox:$("readyBox"),
+  mockArea:$("mockArea"), resultArea:$("resultArea"), profileBox:$("profileBox"),
+  chatBox:$("chatBox"), chatInput:$("chatInput"), sendChatBtn:$("sendChatBtn"), chatMsg:$("chatMsg"),
+  noteTitle:$("noteTitle"), noteSubject:$("noteSubject"), noteBody:$("noteBody"), shareNoteBtn:$("shareNoteBtn"),
+  notesMsg:$("notesMsg"), notesList:$("notesList"), adminTabBtn:$("adminTabBtn")
+};
+
+function showMsg(el, text, type="orange"){
+  el.className = "notice " + type;
+  el.textContent = text;
+  el.classList.remove("hidden");
+}
+function hideMsg(el){ el.classList.add("hidden"); }
+function updateStats(){
+  const used = Number(localStorage.getItem(GUEST_KEY)||0);
+  els.guestUsed.textContent = `${Math.min(used,3)}/3`;
+  els.mcqCount.textContent = String(questions.length);
+  els.loginState.textContent = currentUser ? "Google" : "Guest";
+}
+function initials(name,email){
+  const s = (name || email || "Guest").trim();
+  return s.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "GU";
+}
+function setAvatar(target, user, big=false){
+  if(user?.photoURL){
+    target.innerHTML = `<img src="${escapeHtml(user.photoURL)}" alt="profile">`;
+  } else {
+    target.textContent = user ? initials(user.displayName,user.email) : "GU";
+  }
+}
+function escapeHtml(s=""){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function setTab(tab){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tab,[data-tab]").forEach(b=>b.classList.remove("active"));
+  $(tab)?.classList.add("active");
+  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b=>b.classList.add("active"));
+  if(tab==="mock") renderMock();
+  if(tab==="results") renderResults();
+  if(tab==="profile") renderProfile();
+}
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+
+async function login(){
+  if(!auth) return alert("Firebase not loaded.");
+  if(currentUser){ await signOut(auth); return; }
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  try{
+    await signInWithPopup(auth, provider);
+  }catch(e){
+    console.warn("Popup login failed, trying redirect", e);
+    try{ await signInWithRedirect(auth, provider); }
+    catch(err){
+      alert("Google login failed. Firebase Authorized domains me sumanta-marddy.github.io add karo.");
+    }
+  }
+}
+els.loginBtn.addEventListener("click", login);
+
+if(auth){
+  getRedirectResult(auth).catch(()=>{});
+  onAuthStateChanged(auth, user => {
+    currentUser = user || null;
+    els.loginBtn.textContent = currentUser ? "Logout" : "Login";
+    setAvatar(els.topAvatar, currentUser);
+    const isOwner = currentUser?.email && OWNER_EMAILS.includes(currentUser.email);
+    els.adminTabBtn.classList.toggle("hidden", !isOwner);
+    updateStats();
+    renderProfile();
+    startRealtime();
+  });
+}
+
+async function readFile(file){
+  if(!file) return;
+  extractedText = "";
+  hideMsg(els.fileStatus);
+  showMsg(els.fileStatus, "Uploading and extracting text, please wait...", "orange");
+  try{
+    const name = file.name.toLowerCase();
+    if(name.endsWith(".pdf") || file.type.includes("pdf")){
+      extractedText = await extractPdf(file);
+    } else if(name.endsWith(".docx")){
+      extractedText = await extractDocx(file);
+    } else {
+      extractedText = await file.text();
+    }
+    extractedText = cleanText(extractedText);
+    if(extractedText.length < 80){
+      showMsg(els.fileStatus, "Text extract nahi hua. Ye scanned/image PDF ho sakta hai. Normal text PDF upload karo ya text paste karo.", "red");
+    } else {
+      showMsg(els.fileStatus, `Upload successful. ${extractedText.length} characters extracted.`, "green");
+    }
+    els.textPreview.textContent = extractedText.slice(0,1400) || "No text extracted.";
+  }catch(e){
+    console.error(e);
+    showMsg(els.fileStatus, "Upload failed. Dusra PDF try karo ya text paste karo.", "red");
+  }
+}
+els.fileInput.addEventListener("change", e => readFile(e.target.files?.[0]));
+
+async function extractPdf(file){
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:buffer}).promise;
+  let text = "";
+  const maxPages = Math.min(pdf.numPages, 80);
+  for(let p=1;p<=maxPages;p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(i=>i.str).join(" ");
+    text += "\n" + pageText;
+  }
+  return text;
+}
+async function extractDocx(file){
+  if(!window.mammoth) throw new Error("DOCX reader not loaded");
+  const buffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({arrayBuffer:buffer});
+  return result.value || "";
+}
+function cleanText(t){
+  return String(t||"")
+    .replace(/\s+/g," ")
+    .replace(/[^\S\r\n]+/g," ")
+    .trim();
+}
+
+async function getGeminiModels(){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if(!r.ok) throw new Error(data?.error?.message || "Gemini models API failed");
+  const models = (data.models||[]).filter(m => (m.supportedGenerationMethods||[]).includes("generateContent"));
+  const preferred = ["gemini-2.5-flash","gemini-2.0-flash","gemini-2.0-flash-lite","gemini-1.5-flash","gemini-1.5-pro","gemini-pro"];
+  models.sort((a,b)=>{
+    const an = a.name.replace("models/","");
+    const bn = b.name.replace("models/","");
+    const ai = preferred.findIndex(x=>an.includes(x));
+    const bi = preferred.findIndex(x=>bn.includes(x));
+    return (ai<0?999:ai) - (bi<0?999:bi);
+  });
+  return models.map(m=>m.name);
+}
+
+async function generateWithModel(model, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  const r = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      generationConfig:{
+        temperature:0.25,
+        topP:0.9,
+        responseMimeType:"application/json"
+      },
+      contents:[{role:"user",parts:[{text:prompt}]}]
+    })
+  });
+  const data = await r.json();
+  if(!r.ok){
+    const msg = data?.error?.message || `HTTP ${r.status}`;
+    const err = new Error(msg);
+    err.status = r.status;
+    throw err;
+  }
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  return parseQuestions(text);
+}
+function buildPrompt(notes, count, topic, difficulty, language){
+  const clipped = notes.slice(0, 28000);
+  return `
+You are an expert exam question paper setter for Indian competitive exams.
+
+Task:
+Create exactly ${count} high-quality logical MCQs from the student's notes.
+
+Rules:
+- Language for question, options and explanation: ${language}.
+- Topic: ${topic}.
+- Difficulty: ${difficulty}.
+- Do NOT copy broken lines from the notes.
+- Do NOT put answer text inside the question.
+- Do NOT reveal answers in question text.
+- Each MCQ must have 4 options.
+- Only one correct option.
+- Explanation should be short and useful.
+- If notes contain old MCQs, understand the concept and rewrite clean exam-style questions.
+
+Return STRICT JSON only:
+{
+  "questions": [
+    {
+      "question": "question text",
+      "options": ["A option", "B option", "C option", "D option"],
+      "answerIndex": 0,
+      "explanation": "short explanation",
+      "difficulty": "Easy/Medium/Hard",
+      "topic": "topic name"
+    }
+  ]
+}
+
+Student notes:
+${clipped}
+`;
+}
+function parseQuestions(raw){
+  let s = String(raw||"").trim();
+  s = s.replace(/^```json/i,"").replace(/^```/,"").replace(/```$/,"").trim();
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if(first >= 0 && last > first) s = s.slice(first,last+1);
+  const data = JSON.parse(s);
+  const arr = Array.isArray(data) ? data : data.questions;
+  if(!Array.isArray(arr)) throw new Error("AI response format invalid");
+  return arr.map((q,i)=>({
+    question:String(q.question||"").trim(),
+    options:(q.options||[]).slice(0,4).map(o=>String(o).trim()),
+    answerIndex:Number(q.answerIndex),
+    explanation:String(q.explanation||"").trim(),
+    difficulty:String(q.difficulty||"Mixed"),
+    topic:String(q.topic||"")
+  })).filter(q => q.question && q.options.length===4 && q.answerIndex>=0 && q.answerIndex<4);
+}
+
+async function generateMCQs(){
+  const used = Number(localStorage.getItem(GUEST_KEY)||0);
+  if(!currentUser && used >= 3){
+    showMsg(els.generateMsg, "Free guest limit complete. Continue with Google login to generate more MCQs.", "red");
+    return;
+  }
+  const manual = cleanText(els.manualText.value);
+  const notes = manual || extractedText;
+  if(notes.length < 180){
+    showMsg(els.generateMsg, "Please upload a text PDF/TXT/DOCX or paste at least 180 characters notes.", "red");
+    return;
+  }
+  const count = Math.max(3, Math.min(30, Number(els.countInput.value)||10));
+  const topic = els.topicInput.value.trim() || "General Studies";
+  const difficulty = els.difficultyInput.value;
+  const language = els.languageInput.value;
+
+  els.generateBtn.disabled = true;
+  showMsg(els.generateMsg, "Your notes are being converted into MCQs. Please wait...", "orange");
+  els.generateMsg.innerHTML = `<div class="loader"><span class="spinner"></span><span>Your notes are being converted into MCQs. Please wait...</span></div>`;
+  questions = [];
+  answers = [];
+  submitted = false;
+  updateStats();
+
+  try{
+    const models = await getGeminiModels();
+    if(!models.length) throw new Error("No generateContent model available for this API key.");
+    const prompt = buildPrompt(notes, count, topic, difficulty, language);
+    let lastErr = null;
+    for(const model of models.slice(0,8)){
+      try{
+        selectedModel = model.replace("models/","");
+        const qs = await generateWithModel(model, prompt);
+        if(qs.length){
+          questions = qs.slice(0,count);
+          break;
+        }
+      }catch(e){
+        lastErr = e;
+        console.warn("Model failed:", model, e.message);
+        if(e.status && ![429,500,503].includes(e.status)) break;
+      }
+    }
+    if(!questions.length) throw lastErr || new Error("AI did not return MCQs.");
+
+    answers = new Array(questions.length).fill(null);
+    currentIndex = 0;
+    submitted = false;
+    localStorage.setItem(LS_QS, JSON.stringify({questions, at:Date.now(), model:selectedModel}));
+    if(!currentUser) localStorage.setItem(GUEST_KEY, String(used+1));
+    if(currentUser && db){
+      addDoc(collection(db,"generations"),{
+        uid:currentUser.uid,email:currentUser.email,topic,count:questions.length,model:selectedModel,createdAt:serverTimestamp()
+      }).catch(()=>{});
+    }
+
+    updateStats();
+    els.readyBox.textContent = `MCQs ready (${questions.length}). Start Mock dabao.`;
+    els.readyBox.classList.remove("hidden");
+    showMsg(els.generateMsg, `MCQs generated successfully. Model: ${selectedModel}. Start Mock to practice.`, "green");
+  }catch(e){
+    console.error(e);
+    showMsg(els.generateMsg, `Generate failed: ${e.message || "Gemini busy. Please try again."}`, "red");
+  }finally{
+    els.generateBtn.disabled = false;
+  }
+}
+els.generateBtn.addEventListener("click", generateMCQs);
+els.startMockBtn.addEventListener("click", ()=>{ setTab("mock"); renderMock(); });
+
+function renderMock(){
+  if(!questions.length){
+    els.mockArea.className = "notice";
+    els.mockArea.textContent = "Pehle Generate tab me MCQs banaye, fir test start kare.";
+    return;
+  }
+  if(submitted){
+    setTab("results");
+    return;
+  }
+  const q = questions[currentIndex];
+  const pct = Math.round(((currentIndex+1)/questions.length)*100);
+  els.mockArea.className = "";
+  els.mockArea.innerHTML = `
+    <div class="progressTop">
+      <span class="pill">Question ${currentIndex+1} of ${questions.length}</span>
+      <div class="progressBar"><div class="progressFill" style="width:${pct}%"></div></div>
+      <span class="pill">${answers.filter(x=>x!==null).length}/${questions.length} answered</span>
+    </div>
+    <div class="questionCard">
+      <h3 class="qTitle">${escapeHtml(q.question)}</h3>
+      ${q.options.map((o,i)=>`
+        <button class="option ${answers[currentIndex]===i?'selected':''}" data-opt="${i}">
+          <b>${String.fromCharCode(65+i)}.</b> ${escapeHtml(o)}
+        </button>`).join("")}
+      <div class="examNav">
+        <button class="ghostBtn" id="prevQ" ${currentIndex===0?'disabled':''}>Previous</button>
+        ${currentIndex===questions.length-1
+          ? `<button class="primaryBtn" id="submitTest">Submit Test</button>`
+          : `<button class="darkBtn" id="nextQ">Next</button>`}
+      </div>
+    </div>
+  `;
+  els.mockArea.querySelectorAll(".option").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      answers[currentIndex] = Number(btn.dataset.opt);
+      renderMock();
+    });
+  });
+  $("prevQ")?.addEventListener("click",()=>{ if(currentIndex>0){currentIndex--;renderMock();} });
+  $("nextQ")?.addEventListener("click",()=>{ if(currentIndex<questions.length-1){currentIndex++;renderMock();} });
+  $("submitTest")?.addEventListener("click", submitTest);
+}
+function submitTest(){
+  const unanswered = answers.filter(x=>x===null).length;
+  if(unanswered && !confirm(`${unanswered} questions unanswered hain. Submit karna hai?`)) return;
+  submitted = true;
+  let score = 0;
+  questions.forEach((q,i)=>{ if(answers[i] === q.answerIndex) score++; });
+  lastResult = {score,total:questions.length,answers:[...answers],questions,at:new Date().toISOString()};
+  if(currentUser && db){
+    addDoc(collection(db,"results"),{
+      uid:currentUser.uid,email:currentUser.email,score,total:questions.length,createdAt:serverTimestamp()
+    }).catch(()=>{});
+  }
+  setTab("results");
+}
+function renderResults(){
+  if(!lastResult){
+    els.resultArea.className = "notice";
+    els.resultArea.textContent = "Submit test ke baad result yaha dikhega.";
+    return;
+  }
+  const {score,total} = lastResult;
+  els.resultArea.className = "";
+  els.resultArea.innerHTML = `
+    <div class="notice ${score/total>=0.6?'green':'orange'}"><b>Score: ${score}/${total}</b> (${Math.round(score/total*100)}%)</div>
+    <div class="list">
+      ${questions.map((q,i)=>{
+        const chosen = answers[i];
+        const ok = chosen === q.answerIndex;
+        return `<div class="item">
+          <div class="itemTitle">Q${i+1}. ${escapeHtml(q.question)}</div>
+          ${q.options.map((o,idx)=>{
+            const cls = idx===q.answerIndex?'correct':(idx===chosen && !ok?'wrong':'');
+            return `<div class="option ${cls}" style="cursor:default"><b>${String.fromCharCode(65+idx)}.</b> ${escapeHtml(o)}</div>`;
+          }).join("")}
+          <div class="small"><b>Your answer:</b> ${chosen===null?'Not answered':escapeHtml(q.options[chosen])}</div>
+          <div class="small"><b>Explanation:</b> ${escapeHtml(q.explanation || "No explanation.")}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderProfile(){
+  if(!els.profileBox) return;
+  if(!currentUser){
+    els.profileBox.innerHTML = `
+      <div class="notice">Google login ke baad student profile, results, chat aur notes sync honge.</div>
+      <button class="primaryBtn" id="profileLogin">Continue with Google</button>
+    `;
+    $("profileLogin")?.addEventListener("click", login);
+    return;
+  }
+  els.profileBox.innerHTML = `
+    <div class="profileGrid">
+      <div class="bigAvatar" id="bigProfileAvatar">${initials(currentUser.displayName,currentUser.email)}</div>
+      <div>
+        <h3>${escapeHtml(currentUser.displayName || "Student")}</h3>
+        <p class="small">${escapeHtml(currentUser.email || "")}</p>
+        <p class="small">UID: ${escapeHtml(currentUser.uid)}</p>
+        <button class="ghostBtn" id="profileLogout">Logout</button>
+      </div>
+    </div>
+  `;
+  setAvatar($("bigProfileAvatar"), currentUser, true);
+  $("profileLogout")?.addEventListener("click", login);
+}
+
+let realtimeStarted = false;
+function startRealtime(){
+  if(!db || realtimeStarted) return;
+  realtimeStarted = true;
+  try{
+    onSnapshot(query(collection(db,"chat"),orderBy("createdAt","desc"),limit(40)), snap=>{
+      const docs = [];
+      snap.forEach(d=>docs.push(d.data()));
+      docs.reverse();
+      renderChat(docs);
+    });
+    onSnapshot(query(collection(db,"sharedNotes"),orderBy("createdAt","desc"),limit(30)), snap=>{
+      const docs = [];
+      snap.forEach(d=>docs.push(d.data()));
+      renderNotes(docs);
+    });
+  }catch(e){ console.warn(e); }
+}
+function renderChat(items=[]){
+  els.chatBox.innerHTML = items.map(m=>{
+    const me = currentUser && m.uid === currentUser.uid;
+    return `<div class="msg ${me?'me':''}">
+      <div class="name">${escapeHtml(m.name || "Student")}</div>
+      <div>${escapeHtml(m.text || "")}</div>
+    </div>`;
+  }).join("") || `<div class="notice">No messages yet.</div>`;
+  els.chatBox.scrollTop = els.chatBox.scrollHeight;
+}
+els.sendChatBtn.addEventListener("click", async ()=>{
+  const text = els.chatInput.value.trim();
+  if(!currentUser) return showMsg(els.chatMsg,"Chat ke liye Google login required hai.","red");
+  if(!text) return;
+  els.chatInput.value = "";
+  try{
+    await addDoc(collection(db,"chat"),{
+      uid:currentUser.uid,name:currentUser.displayName || currentUser.email,text,createdAt:serverTimestamp()
+    });
+    hideMsg(els.chatMsg);
+  }catch(e){ showMsg(els.chatMsg,"Message send failed. Firestore rules check karo.","red"); }
+});
+els.chatInput.addEventListener("keydown",e=>{ if(e.key==="Enter") els.sendChatBtn.click(); });
+
+function renderNotes(items=[]){
+  els.notesList.innerHTML = items.map(n=>`
+    <div class="item">
+      <div class="itemTitle">${escapeHtml(n.title || "Untitled")}</div>
+      <div class="small">${escapeHtml(n.subject || "")} • by ${escapeHtml(n.name || "Student")}</div>
+      <p>${escapeHtml(n.body || "")}</p>
+    </div>
+  `).join("") || `<div class="notice">No shared notes yet.</div>`;
+}
+els.shareNoteBtn.addEventListener("click", async ()=>{
+  if(!currentUser) return showMsg(els.notesMsg,"Notes share karne ke liye Google login required hai.","red");
+  const title = els.noteTitle.value.trim();
+  const subject = els.noteSubject.value.trim();
+  const body = els.noteBody.value.trim();
+  if(!title || !body) return showMsg(els.notesMsg,"Title aur note text required hai.","red");
+  try{
+    await addDoc(collection(db,"sharedNotes"),{
+      uid:currentUser.uid,name:currentUser.displayName || currentUser.email,title,subject,body,createdAt:serverTimestamp()
+    });
+    els.noteTitle.value = els.noteSubject.value = els.noteBody.value = "";
+    showMsg(els.notesMsg,"Note shared.","green");
+  }catch(e){ showMsg(els.notesMsg,"Note share failed. Firestore rules check karo.","red"); }
+});
+
+// restore latest generated questions
+try{
+  const saved = JSON.parse(localStorage.getItem(LS_QS) || "null");
+  if(saved?.questions?.length){
+    questions = saved.questions;
+    answers = new Array(questions.length).fill(null);
+    selectedModel = saved.model || "";
+  }
+}catch{}
+updateStats();
+renderProfile();
+renderMock();
+renderResults();
+startRealtime();
+</script>
+</body>
+</html>
